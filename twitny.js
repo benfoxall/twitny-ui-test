@@ -3,41 +3,71 @@
 
 
 	// The transform matrix for rotating the ball
-	var M = Matrix.I(3), 
+	var M = Matrix.I(3),
+		tempRot = Matrix.I(3),
+		totalRot = Matrix.I(3),
+		mousedown= false,
+		lastX = null,
+		lastY = null,
 		drawn = false;
 
 	// set view of the globe based on mouse/touch position
 	function setView(x,y){
 
-		var a = Matrix.RotationY(x/100);
-		var b = Matrix.RotationX(-y/100);
+		var deltaX = x - lastX;
+		var deltaY = y - lastY;
+
+		M = Matrix.I(3);
+		var a = Matrix.RotationY(deltaX/100);
+		var b = Matrix.RotationX(deltaY/100);
 
 		M = a.x(b);
+		totalRot = tempRot.x(M);
+		// tempRot = totalRot;
+
+		// lastX = x;
+		// lastY = y;
+
 		drawn = false;
 	}
 
 	var handlers = {
-		touch:function(e){
+		mousedown:function(e){
 			e.preventDefault();
-
-			var x = e.touches[0].pageX;
-			var y = e.touches[0].pageY;
-			setView(x,y);
+			mousedown=true;
+			tempRot = totalRot;
+			lastX = e.clientX;
+			lastY = e.clientY;
 		},
+		mouseup:function(e){
+			e.preventDefault();
+			mousedown=false;
+			tempRot = totalRot;
+		},
+		// touch:function(e){
+		// 	e.preventDefault();
+
+		// 	var x = e.touches[0].pageX;
+		// 	var y = e.touches[0].pageY;
+		// 	setView(x,y);
+		// },
 		mouse:function(e){
 			e.preventDefault();
+			if (!mousedown){
+				return;
+			}
 
 			var x = e.clientX;
 			var y = e.clientY;
 			setView(x,y);
-
 		}
 	};
 
-
+	window.addEventListener("mousedown",  handlers.mousedown, false);
+	window.addEventListener("mouseup",	  handlers.mouseup, false);
 	window.addEventListener("mousemove",  handlers.mouse, false);
-	window.addEventListener("touchmove",  handlers.touch, false);
-	window.addEventListener("touchstart", handlers.touch, false);
+	// window.addEventListener("touchmove",  handlers.touch, false);
+	// window.addEventListener("touchstart", handlers.touch, false);
 
 
 	// map the lat/lngs into cartesian coords and the
@@ -96,12 +126,12 @@
 		vectors.forEach(function(vector, i){
 
 			// transform to the current view
-			var v = M.x(vector.v);
+			var v = totalRot.x(vector.v);
 
 			// skip backface points
 			if(v.elements[2] > 0) return;
 
-			var v2 = M.x(vector.v2);
+			var v2 = totalRot.x(vector.v2);
 
 			context.moveTo(v.elements[0],v.elements[1]);
 			context.lineTo(v2.elements[0],v2.elements[1]);
