@@ -1,22 +1,19 @@
 // drawing the globe thing, requires Sylvester and `data` (the lng/lat list)
 ;(function(data){
 
-	function degToRad(degrees) {
-        return degrees * Math.PI / 180;
-    }
-
-
     var mouseDown = false;
     var lastMouseX = null;
     var lastMouseY = null;
     var drawn = false;
 
-    var moonRotationMatrix = Matrix.I(3);
+    var moonRotationMatrix = Matrix.I(3),
+    	oldMoonRotationMatrix = Matrix.I(3);
 
     function handleMouseDown(event) {
         mouseDown = true;
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
+        oldMoonRotationMatrix = moonRotationMatrix;
     }
 
 
@@ -33,18 +30,18 @@
         var newY = event.clientY;
 
         var deltaX = newX - lastMouseX
-        var a = Matrix.RotationY(degToRad(-deltaX / 10));
+        var a = Matrix.RotationY(-deltaX / 100);
 
         var deltaY = newY - lastMouseY;
-        var b = Matrix.RotationX(degToRad(deltaY / 10));
+        var b = Matrix.RotationX(deltaY / 100);
 
         var M = Matrix.I(3);
         M = a.x(b);
 
-        moonRotationMatrix = M.x(moonRotationMatrix);
+        moonRotationMatrix = M.x(oldMoonRotationMatrix);
 
-        lastMouseX = newX
-        lastMouseY = newY;
+        // lastMouseX = newX
+        // lastMouseY = newY;
 
         drawn = false;
     }
