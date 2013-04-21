@@ -1,71 +1,57 @@
 // drawing the globe thing, requires Sylvester and `data` (the lng/lat list)
 ;(function(data){
 
+	function degToRad(degrees) {
+        return degrees * Math.PI / 180;
+    }
 
-	// The transform matrix for rotating the ball
-	var M = Matrix.I(3),
-		tempRot = Matrix.I(3),
-		totalRot = Matrix.I(3),
-		mousedown= false,
-		lastX = null,
-		lastY = null,
-		drawn = false;
 
-	// set view of the globe based on mouse/touch position
-	function setView(x,y){
+    var mouseDown = false;
+    var lastMouseX = null;
+    var lastMouseY = null;
+    var drawn = false;
 
-		var deltaX = x - lastX;
-		var deltaY = y - lastY;
+    var moonRotationMatrix = Matrix.I(3);
 
-		M = Matrix.I(3);
-		var a = Matrix.RotationY(deltaX/100);
-		var b = Matrix.RotationX(deltaY/100);
+    function handleMouseDown(event) {
+        mouseDown = true;
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
+    }
 
-		M = a.x(b);
-		totalRot = tempRot.x(M);
-		// tempRot = totalRot;
 
-		// lastX = x;
-		// lastY = y;
+    function handleMouseUp(event) {
+        mouseDown = false;
+    }
 
-		drawn = false;
-	}
 
-	var handlers = {
-		mousedown:function(e){
-			e.preventDefault();
-			mousedown=true;
-			tempRot = totalRot;
-			lastX = e.clientX;
-			lastY = e.clientY;
-		},
-		mouseup:function(e){
-			e.preventDefault();
-			mousedown=false;
-			tempRot = totalRot;
-		},
-		// touch:function(e){
-		// 	e.preventDefault();
+    function handleMouseMove(event) {
+        if (!mouseDown) {
+            return;
+        }
+        var newX = event.clientX;
+        var newY = event.clientY;
 
-		// 	var x = e.touches[0].pageX;
-		// 	var y = e.touches[0].pageY;
-		// 	setView(x,y);
-		// },
-		mouse:function(e){
-			e.preventDefault();
-			if (!mousedown){
-				return;
-			}
+        var deltaX = newX - lastMouseX
+        var a = Matrix.RotationY(degToRad(-deltaX / 10));
 
-			var x = e.clientX;
-			var y = e.clientY;
-			setView(x,y);
-		}
-	};
+        var deltaY = newY - lastMouseY;
+        var b = Matrix.RotationX(degToRad(deltaY / 10));
 
-	window.addEventListener("mousedown",  handlers.mousedown, false);
-	window.addEventListener("mouseup",	  handlers.mouseup, false);
-	window.addEventListener("mousemove",  handlers.mouse, false);
+        var M = Matrix.I(3);
+        M = a.x(b);
+
+        moonRotationMatrix = M.x(moonRotationMatrix);
+
+        lastMouseX = newX
+        lastMouseY = newY;
+
+        drawn = false;
+    }
+
+	window.addEventListener("mousedown",  handleMouseDown, false);
+	window.addEventListener("mouseup",	  handleMouseUp, false);
+	window.addEventListener("mousemove",  handleMouseMove, false);
 	// window.addEventListener("touchmove",  handlers.touch, false);
 	// window.addEventListener("touchstart", handlers.touch, false);
 
@@ -126,12 +112,12 @@
 		vectors.forEach(function(vector, i){
 
 			// transform to the current view
-			var v = totalRot.x(vector.v);
+			var v = moonRotationMatrix.x(vector.v);
 
 			// skip backface points
 			if(v.elements[2] > 0) return;
 
-			var v2 = totalRot.x(vector.v2);
+			var v2 = moonRotationMatrix.x(vector.v2);
 
 			context.moveTo(v.elements[0],v.elements[1]);
 			context.lineTo(v2.elements[0],v2.elements[1]);
