@@ -46,11 +46,27 @@
         drawn = false;
     }
 
-	window.addEventListener("mousedown",  handleMouseDown, false);
-	window.addEventListener("mouseup",	  handleMouseUp, false);
-	window.addEventListener("mousemove",  handleMouseMove, false);
-	// window.addEventListener("touchmove",  handlers.touch, false);
-	// window.addEventListener("touchstart", handlers.touch, false);
+	// hack proxy touch events to mouse handlers
+	function p(fn){
+		return function(e){
+			if(e.touches.length){
+				e.clientX = e.touches[0].clientX;
+				e.clientY = e.touches[0].clientY;
+			}
+			fn(e);
+		}
+	}
+
+	if(|"touchstart" in window){
+		window.addEventListener("touchstart", p(handleMouseDown), false);
+		window.addEventListener("touchend",   p(handleMouseUp), false);
+		window.addEventListener("touchmove",  p(handleMouseMove), false);
+	} else {
+		window.addEventListener("mousedown",  handleMouseDown, false);
+		window.addEventListener("mouseup",	  handleMouseUp, false);
+		window.addEventListener("mousemove",  handleMouseMove, false);
+	}
+
 
 
 	// map the lat/lngs into cartesian coords and the
