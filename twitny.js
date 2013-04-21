@@ -6,14 +6,14 @@
     var lastMouseY = null;
     var drawn = false;
 
-    var moonRotationMatrix = Matrix.I(3),
-    	oldMoonRotationMatrix = Matrix.I(3);
+    var RotationMatrix = Matrix.I(3),
+    	oldRotationMatrix = Matrix.I(3);
 
     function handleMouseDown(event) {
         mouseDown = true;
         lastMouseX = event.clientX;
         lastMouseY = event.clientY;
-        oldMoonRotationMatrix = moonRotationMatrix;
+        oldRotationMatrix = RotationMatrix;
     }
 
 
@@ -38,7 +38,7 @@
         var M = Matrix.I(3);
         M = a.x(b);
 
-        moonRotationMatrix = M.x(oldMoonRotationMatrix);
+        RotationMatrix = M.x(oldRotationMatrix);
 
         // lastMouseX = newX
         // lastMouseY = newY;
@@ -109,12 +109,12 @@
 		vectors.forEach(function(vector, i){
 
 			// transform to the current view
-			var v = moonRotationMatrix.x(vector.v);
+			var v = RotationMatrix.x(vector.v);
 
 			// skip backface points
 			if(v.elements[2] > 0) return;
 
-			var v2 = moonRotationMatrix.x(vector.v2);
+			var v2 = RotationMatrix.x(vector.v2);
 
 			context.moveTo(v.elements[0],v.elements[1]);
 			context.lineTo(v2.elements[0],v2.elements[1]);
